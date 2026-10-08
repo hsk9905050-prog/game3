@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쫑알쫑알 말놀이 - 내 마음을 말해요!</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts for Kids Friendly UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gothic+A1:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Jua', 'Gothic A1', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Bounce effect for kids active touch */
+        .bounce-touch {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
+        }
+        .bounce-touch:active {
+            transform: scale(0.88);
+        }
+
+        /* Cute pulse animation for active elements */
+        @keyframes gentle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-gentle-bounce {
+            animation: gentle-bounce 2s infinite ease-in-out;
+        }
+
+        /* Custom Scrollbar for playful theme */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fef3c7;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d97706;
+        }
+
+        .rainbow-shadow {
+            box-shadow: 0 10px 25px -5px rgba(251, 191, 36, 0.4), 0 8px 10px -6px rgba(244, 63, 94, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen flex flex-col text-slate-800 transition-colors duration-200" id="appBody">
+
+    <!-- Navigation Header -->
+    <header class="bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-rose-500 p-2.5 rounded-3xl shadow-md text-3xl flex items-center justify-center w-12 h-12 transform -rotate-6 animate-gentle-bounce">
+                    🐥
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-wide leading-none drop-shadow">쫑알쫑알 말놀이 🐥</h1>
+                    <p class="text-xs text-amber-100 hidden sm:block font-bold mt-1">카드를 누르면 목소리가 팡팡 나와요!</p>
+                </div>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="flex items-center space-x-2">
+                <button id="toggleSpeechModeBtn" onclick="toggleSpeechMode()" class="bg-white/90 hover:bg-white text-rose-600 px-3 py-2 rounded-2xl text-sm font-bold flex items-center space-x-1.5 transition shadow-sm border-2 border-rose-300 bounce-touch">
+                    <span id="modeIcon" class="text-lg">⚡</span>
+                    <span id="modeLabel">바로 말하기 모드</span>
+                </button>
+                
+                <button onclick="openSettingsModal()" class="bg-white/90 hover:bg-white text-indigo-600 p-2.5 rounded-2xl border-2 border-indigo-300 shadow-sm bounce-touch flex items-center justify-center text-xl" title="목소리 설정">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sentence Builder Bar -->
+    <section class="bg-amber-100/80 border-b-4 border-amber-200 shadow-inner px-4 py-3 sticky top-[68px] z-20 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-3">
+            
+            <!-- Selected Card Strip -->
+            <div class="flex-1 w-full bg-white border-4 border-dashed border-amber-300 rounded-3xl p-2.5 min-h-[72px] flex items-center gap-2 overflow-x-auto shadow-inner" id="sentenceContainer">
+                <div class="text-amber-400 text-lg font-bold px-3 flex items-center space-x-2" id="emptySentenceText">
+                    <span>👈</span>
+                    <span>아래 카드를 터치해 문장을 만들 수 있어요!</span>
+                </div>
+            </div>
+
+            <!-- Speech Action Buttons -->
+            <div class="flex items-center space-x-2 shrink-0 w-full sm:w-auto">
+                <button onclick="speakSentence()" class="flex-1 sm:flex-initial bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black px-6 py-3.5 rounded-2xl shadow-lg text-lg flex items-center justify-center space-x-2 bounce-touch border-b-4 border-emerald-700">
+                    <i class="fa-solid fa-bullhorn text-xl"></i>
+                    <span>소리내기</span>
+                </button>
+                <button onclick="clearSentence()" class="bg-rose-400 hover:bg-rose-500 active:bg-rose-600 text-white font-black p-3.5 rounded-2xl shadow-lg transition flex items-center justify-center bounce-touch border-b-4 border-rose-600" title="지우기">
+                    <i class="fa-solid fa-rotate-left text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Board -->
+    <main class="max-w-7xl mx-auto px-4 py-5 flex-1 w-full flex flex-col gap-5">
+
+        <!-- Category Selector Horizontal List -->
+        <div class="flex flex-col md:flex-row gap-3 items-stretch justify-between">
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none" id="categoryContainer">
+                <!-- Dynamically Rendered Categories -->
+            </div>
+
+            <!-- Custom Card Add Button -->
+            <button onclick="openAddModal()" class="shrink-0 bg-rose-500 hover:bg-rose-600 text-white px-5 py-3 rounded-2xl font-black text-base flex items-center justify-center space-x-2 shadow-md bounce-touch border-b-4 border-rose-700">
+                <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                <span>새 카드 만들기</span>
+            </button>
+        </div>
+
+        <!-- AAC Cards Grid Layout -->
+        <div id="cardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+            <!-- AAC Cards injected via JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-amber-100 border-t-2 border-amber-200 py-4 px-4 text-center text-sm font-bold text-amber-800 mt-auto">
+        <p>🎈 어린이 사용자를 위한 맞춤형 음성 의사소통 AAC 도우미</p>
+    </footer>
+
+    <!-- Voice & Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-4 border-indigo-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-3">
+                <h3 class="text-2xl font-black text-indigo-700 flex items-center space-x-2">
+                    <span>🔊</span>
+                    <span>목소리 & 소리 설정</span>
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 text-2xl font-black p-1 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5">
+                <!-- Voice Selection List Dropdown -->
+                <div>
+                    <label class="block text-sm font-black text-slate-700 mb-2 flex items-center justify-between">
+                        <span>🎙️ 목소리 선택 (Voice)</span>
+                        <span id="voiceCountBadge" class="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">찾는 중...</span>
+                    </label>
+                    <select id="voiceSelect" onchange="onVoiceChange()" class="w-full bg-slate-50 border-2 border-indigo-200 rounded-2xl p-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-400 outline-none">
+                        <option value="">기본 한국어 목소리 사용</option>
+                    </select>
+                    <p class="text-xs text-slate-400 mt-1">※ 사용 중인 기기(스마트폰/PC)에 탑재된 음성 목록을 보여줍니다.</p>
+                </div>
+
+                <!-- Kids Voice Tone Quick Preset Buttons -->
+                <div>
+                    <label class="block text-sm font-black text-slate-700 mb-2">✨ 빠른 목소리 스타일 추천</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="applyPreset('kid')" class="bg-rose-100 hover:bg-rose-200 border-2 border-rose-300 text-rose-800 p-2.5 rounded-2xl font-black text-xs flex flex-col items-center gap-1 bounce-touch">
+                            <span class="text-xl">🧒</span>
+                            <span>어린이 톤</span>
+                        </button>
+                        <button onclick="applyPreset('friendly')" class="bg-amber-100 hover:bg-amber-200 border-2 border-amber-300 text-amber-800 p-2.5 rounded-2xl font-black text-xs flex flex-col items-center gap-1 bounce-touch">
+                            <span class="text-xl">😊</span>
+                            <span>다정한 톤</span>
+                        </button>
+                        <button onclick="applyPreset('clear')" class="bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-300 text-emerald-800 p-2.5 rounded-2xl font-black text-xs flex flex-col items-center gap-1 bounce-touch">
+                            <span class="text-xl">📢</span>
+                            <span>또박또박 톤</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Speed Control -->
+                <div class="bg-indigo-50 p-3.5 rounded-2xl border border-indigo-100">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-sm font-black text-indigo-900">🐢/🐇 말하기 속도</label>
+                        <span id="rateVal" class="text-sm font-black text-indigo-600">보통 (1.0)</span>
+                    </div>
+                    <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="1.0" oninput="updateSpeechSettings()" class="w-full accent-indigo-600 cursor-pointer">
+                    <div class="flex justify-between text-xs font-bold text-slate-400 mt-1">
+                        <span>천천히</span>
+                        <span>보통</span>
+                        <span>빠르게</span>
+                    </div>
+                </div>
+
+                <!-- Pitch Control -->
+                <div class="bg-indigo-50 p-3.5 rounded-2xl border border-indigo-100">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-sm font-black text-indigo-900">🎵 음높이 (목소리 톤)</label>
+                        <span id="pitchVal" class="text-sm font-black text-indigo-600">보통 (1.0)</span>
+                    </div>
+                    <input type="range" id="pitchRange" min="0.5" max="1.8" step="0.1" value="1.2" oninput="updateSpeechSettings()" class="w-full accent-indigo-600 cursor-pointer">
+                    <div class="flex justify-between text-xs font-bold text-slate-400 mt-1">
+                        <span>낮음</span>
+                        <span>보통</span>
+                        <span>높음 (어린이)</span>
+                    </div>
+                </div>
+
+                <!-- Test Voice Button -->
+                <button onclick="testVoice()" class="w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-black py-3 rounded-2xl shadow-md bounce-touch flex items-center justify-center space-x-2 text-base">
+                    <i class="fa-solid fa-circle-play"></i>
+                    <span>테스트 음성 듣기</span>
+                </button>
+
+                <!-- Reset Cards Button -->
+                <button onclick="showResetConfirmModal()" class="w-full border-2 border-slate-200 text-slate-500 hover:bg-slate-100 font-bold py-2 rounded-2xl text-xs transition">
+                    카드를 처음 상태로 되돌리기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Card Modal -->
+    <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-rose-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-3">
+                <h3 class="text-2xl font-black text-rose-600 flex items-center space-x-2">
+                    <span>✨</span>
+                    <span>새 소리 카드 만들기</span>
+                </h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-rose-500 text-2xl font-black p-1 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="addCardForm" onsubmit="handleAddCard(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1">카테고리</label>
+                    <select id="newCategory" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-sm font-extrabold focus:ring-2 focus:ring-rose-400 outline-none">
+                        <option value="school">🎒 학교</option>
+                        <option value="play">🎨 놀이</option>
+                        <option value="food">🍔 음식</option>
+                        <option value="emotion">❤️ 마음</option>
+                        <option value="sick">🚑 도움</option>
+                        <option value="custom">⭐ 내 카드</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1">카드에 보여줄 글자</label>
+                    <input type="text" id="newTitle" required placeholder="예: 안아주세요, 토할 것 같아요" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-base font-extrabold focus:ring-2 focus:ring-rose-400 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1">이모지 그림 (Emoji)</label>
+                    <input type="text" id="newEmoji" required placeholder="예: 🤗, 🧸, 🥛" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-3xl text-center focus:ring-2 focus:ring-rose-400 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1">읽어줄 말씀 (음성)</label>
+                    <input type="text" id="newSpeakText" placeholder="비워두면 위의 글자를 그대로 읽어요" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-sm font-extrabold focus:ring-2 focus:ring-rose-400 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-600 mb-1">카드 예쁜 색상 선택</label>
+                    <div class="grid grid-cols-5 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="cardColor" value="bg-amber-100 border-amber-300 text-amber-950" checked class="peer sr-only">
+                            <div class="h-10 rounded-2xl bg-amber-200 border-4 border-transparent peer-checked:border-rose-500 flex items-center justify-center font-black text-xs">노랑</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="cardColor" value="bg-sky-100 border-sky-300 text-sky-950" class="peer sr-only">
+                            <div class="h-10 rounded-2xl bg-sky-200 border-4 border-transparent peer-checked:border-rose-500 flex items-center justify-center font-black text-xs">파랑</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="cardColor" value="bg-emerald-100 border-emerald-300 text-emerald-950" class="peer sr-only">
+                            <div class="h-10 rounded-2xl bg-emerald-200 border-4 border-transparent peer-checked:border-rose-500 flex items-center justify-center font-black text-xs">초록</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="cardColor" value="bg-purple-100 border-purple-300 text-purple-950" class="peer sr-only">
+                            <div class="h-10 rounded-2xl bg-purple-200 border-4 border-transparent peer-checked:border-rose-500 flex items-center justify-center font-black text-xs">보라</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="cardColor" value="bg-rose-100 border-rose-300 text-rose-950" class="peer sr-only">
+                            <div class="h-10 rounded-2xl bg-rose-200 border-4 border-transparent peer-checked:border-rose-500 flex items-center justify-center font-black text-xs">분홍</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex space-x-2">
+                    <button type="button" onclick="closeAddModal()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-3 rounded-2xl transition">취소</button>
+                    <button type="submit" class="w-1/2 bg-rose-500 hover:bg-rose-600 text-white font-black py-3 rounded-2xl shadow-md bounce-touch">저장하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Modal (No default alert/confirm) -->
+    <div id="dialogModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-4 border-amber-300 transform transition-all">
+            <div id="dialogIcon" class="text-5xl mb-3">💡</div>
+            <h4 id="dialogTitle" class="text-xl font-black text-slate-800 mb-2">알림</h4>
+            <p id="dialogMessage" class="text-sm font-bold text-slate-600 mb-6">메시지 내용</p>
+            <div id="dialogButtons" class="flex justify-center gap-2">
+                <button id="dialogOkBtn" onclick="closeDialog()" class="bg-indigo-600 text-white font-black px-6 py-2.5 rounded-2xl shadow bounce-touch w-full">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default AAC Cards list tailored for younger kids
+        const defaultCards = [
+            // 🎒 학교
+            { id: 1, category: 'school', title: '화장실 가요', emoji: '🚽', color: 'bg-amber-100 border-amber-300 text-amber-950', speech: '화장실 가요!' },
+            { id: 2, category: 'school', title: '도와주세요!', emoji: '🆘', color: 'bg-rose-100 border-rose-300 text-rose-950', speech: '도와주세요!' },
+            { id: 3, category: 'school', title: '안아주세요', emoji: '🤗', color: 'bg-rose-100 border-rose-300 text-rose-950', speech: '안아주세요!' },
+            { id: 4, category: 'school', title: '네! (좋아요)', emoji: '⭕', color: 'bg-emerald-100 border-emerald-300 text-emerald-950', speech: '네! 좋아요!' },
+            { id: 5, category: 'school', title: '아니에요', emoji: '❌', color: 'bg-rose-100 border-rose-300 text-rose-950', speech: '아니에요.' },
+            { id: 6, category: 'school', title: '손 씻고 올게요', emoji: '🧼', color: 'bg-sky-100 border-sky-300 text-sky-950', speech: '손 씻고 올게요.' },
+            { id: 7, category: 'school', title: '가방 챙겨요', emoji: '🎒', color: 'bg-amber-100 border-amber-300 text-amber-950', speech: '가방 챙겨요.' },
+            { id: 8, category: 'school', title: '기다려 주세요', emoji: '⏳', color: 'bg-amber-100 border-amber-300 text-amber-950', speech: '기다려 주세요.' },
+
+            // 🎨 재미있는 놀이
+            { id: 9, category: 'play', title: '장난감 놀이해요', emoji: '🧸', color: 'bg-purple-100 border-purple-300 text-purple-950', speech: '장난감 놀이해요.' },
+            { id: 10, category: 'play', title: '친구랑 같이 놀래', emoji: '🤝', color: 'bg-rose-100 border-rose-300 text-rose-950', speech: '친구랑 같이 놀래요.' },
+            { id: 11, category: 'play', title: '그림 그리기', emoji: '🎨', color: 'bg-amber-100 border-amber-300 text-amber-950', speech: '그림 그릴래요.' },
+            { id: 12, category: 'play', title: '놀이터 가요', emoji: '🛝', color: 'bg-emerald-100 border-emerald-300 text-emerald-950', speech: '놀이터 가요.' },
+            { id: 13, category: 'play', title: '블록 쌓기', emoji: '🧱', color: 'bg-sky-100 border-sky-300 text-sky-950', speech: '블록 놀이 할래요.' },
+            { id: 14, category: 'play', title: '동화책 읽어요', emoji: '📚', color: 'bg-sky-100 border-sky-300 text-sky-950', speech: '동화책 읽어주세요.' },
+
+            // 🍔 맛있는 음식/간식
+            { id: 15, category: 'food', title: '물 마실래요', emoji: '💧', color: 'bg-sky-100 border-sky-300 text-sky-950', speech: '물 마실래요.' },
+            { id: 16, category: 'food', title: '밥 먹을래요', emoji: '🍱', color: 'bg-amber-100 border-amber-300 text-amber-950', speech: '밥 먹을래요.' },
+            { id: 17, category: 'food', title: '맛있는 간식', emoji: '🍪', color: 'bg-amber-100 border-amber-300 text-amber-950', speech: '간식 먹을래요.' },
+            { id: 18, category: 'food', title: '우유 주세요', emoji: '🥛', color: 'bg-sky-100 border-sky-300 text-sky-950', speech: '우유 주세요.' },
+            { id: 19, category: 'food', title: '다 먹었어요', emoji: '🥣', color: 'bg-emerald-100 border-emerald-300 text-emerald-950', speech: '다 먹었어요!' },
+
+            // ❤️️ 내 마음/기분
+            { id: 20, category: 'emotion', title: '기분 좋아요!', emoji: '😄', color: 'bg-emerald-100 border-emerald-300 text-emerald-950', speech: '기분 좋아요!' },
+            { id: 21, category: 'emotion', title: '속상해요', emoji: '😢', color: 'bg-sky-100 border-sky-300 text-sky-950', speech: '속상해요.' },
+            { id: 22, category: 'emotion', title: '졸려요 / 피곤해요', emoji: '🥱', color: 'bg-purple-100 border-purple-300 text-purple-950', speech: '졸려요.' },
+            { id: 23, category: 'emotion', title: '무서워요', emoji: '😨', color: 'bg-purple-100 border-purple-300 text-purple-950', speech: '무서워요.' },
+            { id: 24, category: 'emotion', title: '최고예요!', emoji: '👍', color: 'bg-emerald-100 border-emerald-300 text-emerald-950', speech: '최고예요!' },
+
+            // 🚑 아파요/도움
+            { id: 25, category: 'sick', title: '배 아파요', emoji: '🤢', color: 'bg-rose-100 border-rose-300 text-rose-950', speech: '배가 아파요.' },
+            { id: 26, category: 'sick', title: '머리 아파요', emoji: '🤕', color: 'bg-rose-100 border-rose-300 text-rose-950', speech: '머리가 아파요.' },
+            { id: 27, category: 'sick', title: '너무 시끄러워요', emoji: '📢', color: 'bg-purple-100 border-purple-300 text-purple-950', speech: '너무 시끄러워요.' },
+            { id: 28, category: 'sick', title: '쉬고 싶어요', emoji: '⏸️', color: 'bg-amber-100 border-amber-300 text-amber-950', speech: '쉬고 싶어요.' }
+        ];
+
+        // Categories Configuration
+        const categories = [
+            { id: 'all', name: '⭐ 전체', icon: 'fa-border-all' },
+            { id: 'school', name: '🎒 학교', icon: 'fa-school' },
+            { id: 'play', name: '🎨 놀이', icon: 'fa-shapes' },
+            { id: 'food', name: '🍔 음식', icon: 'fa-cookie-bite' },
+            { id: 'emotion', name: '❤️ 마음', icon: 'fa-heart' },
+            { id: 'sick', name: '🚑 도움', icon: 'fa-kit-medical' },
+            { id: 'custom', name: '✨ 내 카드', icon: 'fa-star' }
+        ];
+
+        // App States
+        let cardsData = [];
+        let currentCategory = 'all';
+        let sentenceList = [];
+        let directSpeechMode = true; // true: immediate speech, false: sentence build
+        let speechRate = 1.0;
+        let speechPitch = 1.2; // default slightly higher pitch for kid's tone
+        let availableVoices = [];
+        let selectedVoiceURI = null;
+
+        // Web Audio API synth sound effect on card click
+        let audioCtx = null;
+
+        window.onload = function() {
+            loadCards();
+            renderCategories();
+            renderCards();
+            updateSentenceUI();
+            initSpeechVoices();
+        };
+
+        function playCuteChime() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                // Cute double pitch jump (C6 -> G6)
+                osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(1567.98, audioCtx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+            } catch(e) {
+                // Ignore audio context errors if muted/blocked
+            }
+        }
+
+        function initSpeechVoices() {
+            if (!('speechSynthesis' in window)) {
+                showCustomDialog('⚠️ 지원 안 됨', '이 웹 브라우저는 음성 출력을 지원하지 않아요. 최신 크롬(Chrome) 브라우저를 권장합니다.');
+                return;
+            }
+
+            function populateVoices() {
+                const voices = window.speechSynthesis.getVoices();
+                if (!voices || voices.length === 0) return;
+
+                // Filter Korean voices first, but keep others as fallbacks
+                availableVoices = voices.sort((a, b) => {
+                    const aIsKo = a.lang.includes('ko') || a.lang.includes('KO');
+                    const bIsKo = b.lang.includes('ko') || b.lang.includes('KO');
+                    return (bIsKo ? 1 : 0) - (aIsKo ? 1 : 0);
+                });
+
+                const voiceSelect = document.getElementById('voiceSelect');
+                const badge = document.getElementById('voiceCountBadge');
+                voiceSelect.innerHTML = '';
+
+                const korVoices = availableVoices.filter(v => v.lang.includes('ko') || v.lang.includes('KO'));
+                badge.innerText = `한국어 목소리 ${korVoices.length}개 찾음`;
+
+                availableVoices.forEach((voice, i) => {
+                    const isKor = voice.lang.includes('ko') || voice.lang.includes('KO');
+                    const option = document.createElement('option');
+                    option.value = voice.voiceURI;
+                    option.textContent = `${isKor ? '🇰🇷 ' : '🌐 '}${voice.name} (${voice.lang})`;
+
+                    if (isKor && !selectedVoiceURI) {
+                        // Auto-select first Korean voice
+                        selectedVoiceURI = voice.voiceURI;
+                        option.selected = true;
+                    } else if (voice.voiceURI === selectedVoiceURI) {
+                        option.selected = true;
+                    }
+
+                    voiceSelect.appendChild(option);
+                });
+            }
+
+            populateVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = populateVoices;
+            }
+        }
+
+        function onVoiceChange() {
+            const select = document.getElementById('voiceSelect');
+            selectedVoiceURI = select.value;
+        }
+
+        function speak(text) {
+            if (!('speechSynthesis' in window)) return;
+
+            window.speechSynthesis.cancel(); // Stop current speech
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+            utterance.rate = parseFloat(speechRate);
+            utterance.pitch = parseFloat(speechPitch);
+
+            // Assign selected voice
+            if (selectedVoiceURI && availableVoices.length > 0) {
+                const matchedVoice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+                if (matchedVoice) {
+                    utterance.voice = matchedVoice;
+                }
+            } else {
+                // Fallback to Korean
+                const korVoice = availableVoices.find(v => v.lang.includes('ko') || v.lang.includes('KO'));
+                if (korVoice) utterance.voice = korVoice;
+            }
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function loadCards() {
+            const saved = localStorage.getItem('aac_kids_custom_cards');
+            if (saved) {
+                try {
+                    cardsData = JSON.parse(saved).map(c => {
+                        if (c.speech) {
+                            c.speech = c.speech.replace(/^선생님,\s*/, '').replace(/^선생님\s*/, '');
+                        }
+                        return c;
+                    });
+                } catch(e) {
+                    cardsData = [...defaultCards];
+                }
+            } else {
+                cardsData = [...defaultCards];
+            }
+        }
+
+        function saveCards() {
+            localStorage.setItem('aac_kids_custom_cards', JSON.stringify(cardsData));
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryContainer');
+            container.innerHTML = categories.map(cat => `
+                <button onclick="setCategory('${cat.id}')" class="px-4 py-2.5 rounded-2xl text-base font-black whitespace-nowrap transition-all duration-200 flex items-center space-x-2 bounce-touch ${
+                    currentCategory === cat.id 
+                    ? 'bg-rose-500 text-white shadow-md scale-105 border-b-4 border-rose-700 ring-2 ring-rose-300' 
+                    : 'bg-white text-slate-700 hover:bg-amber-100 border-2 border-amber-200'
+                }">
+                    <i class="fa-solid ${cat.icon}"></i>
+                    <span>${cat.name}</span>
+                </button>
+            `).join('');
+        }
+
+        function setCategory(catId) {
+            currentCategory = catId;
+            renderCategories();
+            renderCards();
+        }
+
+        function renderCards() {
+            const grid = document.getElementById('cardsGrid');
+            const filtered = currentCategory === 'all' 
+                ? cardsData 
+                : cardsData.filter(c => c.category === currentCategory);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-amber-800">
+                        <div class="text-5xl mb-3">🎈</div>
+                        <p class="font-black text-xl">이 카테고리에는 아직 카드가 없어요.</p>
+                        <p class="text-sm font-bold text-amber-600 mt-1">'새 카드 만들기' 버튼으로 예쁜 카드를 만들어보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(card => `
+                <div onclick="handleCardClick(${card.id})" class="${card.color} border-4 rounded-3xl p-3.5 sm:p-5 flex flex-col items-center justify-between shadow-md hover:shadow-lg cursor-pointer transition transform active:scale-90 bounce-touch group relative min-h-[140px] sm:min-h-[160px] rainbow-shadow">
+                    
+                    <!-- Card Emoji -->
+                    <div class="text-5xl sm:text-6xl my-auto transform group-hover:scale-110 transition duration-200 drop-shadow">
+                        ${card.emoji}
+                    </div>
+
+                    <!-- Card Label -->
+                    <div class="text-center font-black text-base sm:text-lg leading-tight w-full mt-2 tracking-wide text-slate-900">
+                        ${card.title}
+                    </div>
+
+                    <!-- Card Speaker Indicator Icon -->
+                    <div class="absolute top-2 right-2 text-rose-400 opacity-60 group-hover:opacity-100 transition">
+                        <i class="fa-solid fa-volume-low text-sm"></i>
+                    </div>
+
+                    ${card.category === 'custom' ? `
+                        <button onclick="event.stopPropagation(); deleteCard(${card.id})" class="absolute top-2 left-2 text-rose-500 hover:text-rose-700 bg-white/90 p-1.5 rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md" title="삭제">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function handleCardClick(cardId) {
+            playCuteChime();
+            const card = cardsData.find(c => c.id === cardId);
+            if (!card) return;
+
+            const speakText = card.speech || card.title;
+
+            if (directSpeechMode) {
+                speak(speakText);
+            } else {
+                sentenceList.push(card);
+                updateSentenceUI();
+                speak(card.title);
+            }
+        }
+
+        function toggleSpeechMode() {
+            directSpeechMode = !directSpeechMode;
+            const btn = document.getElementById('toggleSpeechModeBtn');
+            const icon = document.getElementById('modeIcon');
+            const label = document.getElementById('modeLabel');
+
+            if (directSpeechMode) {
+                btn.className = "bg-white/90 hover:bg-white text-rose-600 px-3 py-2 rounded-2xl text-sm font-bold flex items-center space-x-1.5 transition shadow-sm border-2 border-rose-300 bounce-touch";
+                icon.innerText = "⚡";
+                label.innerText = "바로 말하기 모드";
+            } else {
+                btn.className = "bg-amber-400 hover:bg-amber-500 text-slate-900 px-3 py-2 rounded-2xl text-sm font-bold flex items-center space-x-1.5 transition shadow-sm border-2 border-amber-300 bounce-touch";
+                icon.innerText = "🧩";
+                label.innerText = "문장 만들기 모드";
+            }
+        }
+
+        function updateSentenceUI() {
+            const container = document.getElementById('sentenceContainer');
+
+            if (sentenceList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-amber-500 text-base font-black px-3 flex items-center space-x-2" id="emptySentenceText">
+                        <span>👈</span>
+                        <span>${directSpeechMode ? '카드를 누르면 예쁜 소리가 바로 나와요!' : '카드를 누르면 순서대로 문장을 조합할 수 있어요!'}</span>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sentenceList.map((card, idx) => `
+                <div class="bg-white border-2 border-amber-300 rounded-2xl px-3 py-1.5 flex items-center space-x-2 shrink-0 shadow-sm animate-pulse">
+                    <span class="text-2xl">${card.emoji}</span>
+                    <span class="font-black text-base text-slate-800">${card.title}</span>
+                    <button onclick="removeFromSentence(${idx})" class="text-rose-400 hover:text-rose-600 ml-1 p-0.5">
+                        <i class="fa-solid fa-circle-xmark text-sm"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeFromSentence(index) {
+            sentenceList.splice(index, 1);
+            updateSentenceUI();
+        }
+
+        function clearSentence() {
+            sentenceList = [];
+            updateSentenceUI();
+        }
+
+        function speakSentence() {
+            if (sentenceList.length === 0) {
+                speak('카드를 먼저 골라주세요!');
+                return;
+            }
+            const combinedText = sentenceList.map(c => c.speech || c.title).join(' ');
+            speak(combinedText);
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function applyPreset(presetType) {
+            if (presetType === 'kid') {
+                speechRate = 1.0;
+                speechPitch = 1.4; // Kid high pitch tone
+            } else if (presetType === 'friendly') {
+                speechRate = 0.9;
+                speechPitch = 1.1; // Gentle teacher tone
+            } else if (presetType === 'clear') {
+                speechRate = 0.8;
+                speechPitch = 1.0; // Slow & clear tone
+            }
+
+            document.getElementById('rateRange').value = speechRate;
+            document.getElementById('pitchRange').value = speechPitch;
+            updateSpeechSettings();
+
+            speak(presetType === 'kid' ? '안녕! 나는 어린이 목소리야!' : presetType === 'friendly' ? '안녕하세요! 다정한 목소리입니다.' : '또박또박 천천히 이야기합니다.');
+        }
+
+        function updateSpeechSettings() {
+            speechRate = document.getElementById('rateRange').value;
+            speechPitch = document.getElementById('pitchRange').value;
+
+            document.getElementById('rateVal').innerText = `${speechRate}x`;
+            document.getElementById('pitchVal').innerText = `${speechPitch}x`;
+        }
+
+        function testVoice() {
+            speak('안녕하세요! 반가워요. 오늘도 신나고 즐거운 하루 보내세요!');
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('addCardForm').reset();
+        }
+
+        function handleAddCard(e) {
+            e.preventDefault();
+            const category = document.getElementById('newCategory').value;
+            const title = document.getElementById('newTitle').value.trim();
+            const emoji = document.getElementById('newEmoji').value.trim() || '💬';
+            const speech = document.getElementById('newSpeakText').value.trim() || title;
+            
+            const colorRadios = document.getElementsByName('cardColor');
+            let color = 'bg-amber-100 border-amber-300 text-amber-950';
+            for (const r of colorRadios) {
+                if (r.checked) {
+                    color = r.value;
+                    break;
+                }
+            }
+
+            const newCard = {
+                id: Date.now(),
+                category: category,
+                title: title,
+                emoji: emoji,
+                color: color,
+                speech: speech
+            };
+
+            cardsData.push(newCard);
+            saveCards();
+            renderCards();
+            closeAddModal();
+
+            speak(`${title} 카드가 만들어졌어요!`);
+        }
+
+        function deleteCard(id) {
+            showCustomConfirm('🗑️ 카드 삭제', '이 카드를 정말 지울까요?', () => {
+                cardsData = cardsData.filter(c => c.id !== id);
+                saveCards();
+                renderCards();
+            });
+        }
+
+        function showResetConfirmModal() {
+            showCustomConfirm('🔄 카드 초기화', '모든 맞춤 카드를 지우고 처음 상태로 되돌릴까요?', () => {
+                cardsData = [...defaultCards];
+                saveCards();
+                renderCards();
+                closeSettingsModal();
+                speak('카드가 처음 상태로 되돌아갔습니다.');
+            });
+        }
+
+        function showCustomDialog(title, message) {
+            document.getElementById('dialogIcon').innerText = '💡';
+            document.getElementById('dialogTitle').innerText = title;
+            document.getElementById('dialogMessage').innerText = message;
+            document.getElementById('dialogButtons').innerHTML = `
+                <button onclick="closeDialog()" class="bg-indigo-600 text-white font-black px-6 py-2.5 rounded-2xl shadow bounce-touch w-full">확인</button>
+            `;
+            document.getElementById('dialogModal').classList.remove('hidden');
+        }
+
+        function showCustomConfirm(title, message, onConfirm) {
+            document.getElementById('dialogIcon').innerText = '❓';
+            document.getElementById('dialogTitle').innerText = title;
+            document.getElementById('dialogMessage').innerText = message;
+            
+            window._confirmAction = onConfirm;
+
+            document.getElementById('dialogButtons').innerHTML = `
+                <button onclick="closeDialog()" class="bg-slate-200 text-slate-700 font-black px-4 py-2 rounded-2xl w-1/2">취소</button>
+                <button onclick="executeConfirm()" class="bg-rose-500 text-white font-black px-4 py-2 rounded-2xl shadow w-1/2 bounce-touch">네, 지울래요</button>
+            `;
+            document.getElementById('dialogModal').classList.remove('hidden');
+        }
+
+        function executeConfirm() {
+            closeDialog();
+            if (window._confirmAction) {
+                window._confirmAction();
+                window._confirmAction = null;
+            }
+        }
+
+        function closeDialog() {
+            document.getElementById('dialogModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
